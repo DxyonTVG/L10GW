@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="storefrontApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Storefront</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Lanyah M "added Bootstrap link" -->
+</head>
+<body class="bg-dark text-white">
+<div class="container mt-5" ng-controller="StorefrontController">
+    <h1 class="text-center mb-4">Storefront: Billing, Shipping & Returns</h1>
+    <!-- Dayon M "Unified storefront page for billing, shipping, and returns" -->
+
+    <!-- Billing Details Section -->
+    <section>
+        <h3>Billing Details</h3>
+        <!-- Dayon M "Billing Details form fields" -->
+        <div class="form-group">
+            <label for="fullName">Full Name</label>
+            <input type="text" id="fullName" class="form-control" required>
+            <!-- Lanyah M "added Full Name field" -->
+        </div>
+        <div class="form-group">
+            <label for="address">Billing Address</label>
+            <input type="text" id="address" class="form-control" required>
+            <!-- Lanyah M "added Billing Address field" -->
+        </div>
+        <div class="form-group">
+            <label for="paymentMethod">Payment Method</label>
+            <select id="paymentMethod" class="form-control">
+                <option>Credit Card</option>
+                <option>PayPal</option>
+                <option>Bank Transfer</option>
+            </select>
+            <!-- Lanyah M "added Payment Method dropdown" -->
+        </div>
+        <button id="submitBillingBtn" class="btn btn-primary mt-3">Submit Billing Details</button>
+        <!-- Dayon M "added submit button for Billing Details" -->
+        <div id="billingOutput" class="mt-3 bg-light text-dark p-3">
+            <!-- Billing details will be displayed here -->
+        </div>
+    </section>
+
+    <!-- Shipping Details Section -->
+    <section class="mt-5">
+        <h3>Shipping Details</h3>
+        <!-- Dayon M "Shipping Information form fields" -->
+        <div class="form-group">
+            <label for="shippingAddress">Shipping Address</label>
+            <input type="text" id="shippingAddress" class="form-control" required>
+            <!-- Lanyah M "added Shipping Address field" -->
+        </div>
+        <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" id="city" class="form-control" required>
+            <!-- Lanyah M "added City field" -->
+        </div>
+        <div class="form-group">
+            <label for="state">State</label>
+            <input type="text" id="state" class="form-control" required>
+            <!-- Lanyah M "added State field" -->
+        </div>
+        <div class="form-group">
+            <label for="zip">Zip Code</label>
+            <input type="text" id="zip" class="form-control" required>
+            <!-- Lanyah M "added Zip Code field" -->
+        </div>
+        <div class="form-group">
+            <label for="carrier">Shipping Carrier</label>
+            <select id="carrier" class="form-control">
+                <option>FedEx</option>
+                <option>UPS</option>
+                <option>DHL</option>
+            </select>
+            <!-- Lanyah M "added Shipping Carrier dropdown" -->
+        </div>
+        <div class="form-group">
+            <label for="shippingMethod">Shipping Method</label>
+            <select id="shippingMethod" class="form-control">
+                <option>Overnight</option>
+                <option>2nd Day</option>
+                <option>Ground</option>
+            </select>
+            <!-- Lanyah M "added Shipping Method dropdown" -->
+        </div>
+        <button id="submitShippingBtn" class="btn btn-primary mt-3">Submit Shipping Details</button>
+        <!-- Dayon M "added submit button for Shipping Details" -->
+        <div id="shippingOutput" class="mt-3 bg-light text-dark p-3">
+            <!-- Shipping details will be displayed here -->
+        </div>
+    </section>
+
+    <!-- Product Returns Section -->
+    <section class="mt-5">
+        <h3>Product Returns</h3>
+        <div class="input-group mb-3">
+            <input type="text" id="productNameInput" class="form-control" placeholder="Product Name">
+            <div class="input-group-append">
+                <button id="addProductBtn" class="btn btn-primary">Add to Returns</button>
+            </div>
+        </div>
+        <!-- Lanyah M "added input-group for adding products to returns" -->
+
+        <!-- Returns Table -->
+        <table class="table table-striped table-dark">
+            <thead>
+                <tr>
+                    <th>Product ID</th>
+                    <th>Product Name</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="returnTableBody">
+                <!-- Dynamic rows will be inserted here -->
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="text-right"><strong>Total:</strong></td>
+                    <td id="returnGrandTotal">$0.00</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+        <!-- Dayon M "This displays return items table" -->
+        <button id="submitReturnBtn" class="btn btn-primary mt-3">Submit Return Details</button>
+        <!-- Dayon M "added submit button for Product Returns" -->
+        <div id="returnOutput" class="mt-3 bg-light text-dark p-3">
+            <!-- Return details will be displayed here -->
+        </div>
+    </section>
+
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+<!-- Lanyah M "added script tags for Bootstrap, jQuery, and AngularJS CDN" -->
+
+<script>
+    let returnCart = []; // Dayon M "renamed variable for return cart items"
+
+    // Function to update the returns table and total
+    function updateReturnTable() {
+        let returnTableBody = $("#returnTableBody");
+        returnTableBody.empty();
+        let grandTotal = 0;
+
+        returnCart.forEach((item, index) => {
+            let total = (item.price * item.quantity).toFixed(2);
+            grandTotal += parseFloat(total);
+
+            let row = `
+                <tr>
+                    <td>${item.productId}</td>
+                    <td>${item.productName}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                    <td>
+                        <input type="number" class="form-control" value="${item.quantity}" min="1" data-index="${index}">
+                    </td>
+                    <td>$${total}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" data-index="${index}">Remove</button>
+                    </td>
+                </tr>
+            `;
+            returnTableBody.append(row);
+        });
+
+        $("#returnGrandTotal").text(`$${grandTotal.toFixed(2)}`);
+    }
+
+    // Lanyah M "Event listener to add products to the return cart"
+    $("#addProductBtn").click(function () {
+        let productName = $("#productNameInput").val().trim();
+        if (productName) {
+            let newProduct = {
+                productId: (returnCart.length + 1).toString().padStart(3, '0'),
+                productName: productName,
+                price: 19.99,
+                quantity: 1
+            };
+            returnCart.push(newProduct);
+            updateReturnTable();
+            $("#productNameInput").val("");
+        }
+    });
+
+    // Update return quantity and remove items
+    $(document).on("input", "input[type='number']", function () {
+        let index = $(this).data("index");
+        let newQuantity = parseInt($(this).val());
+        if (newQuantity > 0) {
+            returnCart[index].quantity = newQuantity;
+            updateReturnTable();
+        }
+    });
+
+    $(document).on("click", ".btn-danger", function () {
+        let index = $(this).data("index");
+        returnCart.splice(index, 1);
+        updateReturnTable();
+    });
+
+    // Capture and display shipping details
+    $("#submitShippingBtn").click(function () {
+        let shippingDetails = {
+            address: $("#shippingAddress").val(),
+            city: $("#city").val(),
+            state: $("#state").val(),
+            zip: $("#zip").val(),
+            carrier: $("#carrier").val(),
+            method: $("#shippingMethod").val()
+        };
+        $("#shippingOutput").text(JSON.stringify(shippingDetails, null, 2));
+    });
+
+    // Capture and display billing details
+    $("#submitBillingBtn").click(function () {
+        let billingDetails = {
+            fullName: $("#fullName").val(),
+            address: $("#address").val(),
+            paymentMethod: $("#paymentMethod").val()
+        };
+        $("#billingOutput").text(JSON.stringify(billingDetails, null, 2));
+    });
+
+    // Capture and display return details
+    $("#submitReturnBtn").click(function () {
+        $("#returnOutput").text(JSON.stringify(returnCart, null, 2));
+    });
+</script>
+
+<style>
+    /* Dayon M */
+    body {
+        background-color: black;
+        color: white;
+        font-family: Arial, sans-serif;
+    }
+
+    h1, .btn-primary, .btn-success, .btn-danger {
+        color: white;
+    }
+
+    .btn-primary {
+        background-color: blue;
+        border: none;
+    }
+
+    .btn-success {
+        background-color: green;
+        border: none;
+    }
+
+    .btn-danger {
+        background-color: red;
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background-color: darkred;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .bg-light {
+        background-color: lightgray !important;
+    }
+
+</style>
+</body>
+</html>
